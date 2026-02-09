@@ -3,7 +3,7 @@ import numpy as np
 
 #constants
 h=0.001
-learn_rate=0.2
+learn_rate=0.25
 
 def sigmoid(x):
     return 1/(1+np.e**-x)
@@ -92,5 +92,5 @@ def backpropagation(data, epochs, overwrite, network,include_validation_test,val
         
 data=np.load("data/trainingdata.npz")
 valdata=np.load("data/validationdata.npz")
-backpropagation(data,100,True,network.Network([28*28,32,1],False,0),True,valdata)
+backpropagation(data,29,True,network.Network([28*28,32,1],False,0),True,valdata)
 #main.main()

@@ -32,7 +32,7 @@ def take_input(is_writing):
                         )
                 gray= gray/255
                 x = gray.reshape(28 * 28, 1)
-                
+                if event.key == pygame.K_c: screen.fill((0,0,0))
                 if event.key == pygame.K_2:
                     teach=True
                     print (int(teach))
@@ -53,7 +53,7 @@ def take_input(is_writing):
                 elif event.key==pygame.K_d:
                     originial=screen.copy()
                     
-                    for i in range(100):
+                    for i in range(1):
                         choice=np.random.randint(0,3)
                         tmp=screen.copy()
                         if choice==0:
@@ -80,7 +80,7 @@ def take_input(is_writing):
                         gray= gray/255
                         m = gray.reshape(28 * 28, 1)
                         
-                        writescript.writedata(m,int(teach))
+                        writescript.writedata(m,0)
                         clock.tick(100)
                         pygame.display.update()
                             
@@ -92,3 +92,4 @@ def take_input(is_writing):
         
         pygame.display.update()
         
+#take_input(True)

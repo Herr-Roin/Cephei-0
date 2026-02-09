@@ -1,0 +1,18 @@
+It has been 5 days since i heard About deeplearning, and since then I havent been doing anything else than 
+coding this MLP. Some important insights and Questions I am Looking for to answer:
+
+Cephei 0 detects circles and distinguishes them from other handrawn objects
+
+Pre-Release
+-Giving it 50 handrawn Pictures of circles, its only ability lies in differentiating between bright and dark Pictures
+
+-Wrote a script that takes a Picture and saves 100 transformed versions of it (random rotation, enlargement, Translation). This somewhat works, it confidently detects circles, but also mistakes triangles and squares often,
+tho never a line. The hypothesis is that Augmentation is not a substitude for diversity, will proceed to draw more Pictures with 10 augmentations for each Picture
+ 
+-Added Validation MSE / Training MSE measurement to DL script
+
+- The hypothesis was true:
+Drawing 30 Pictures with 100 augmentations each validation MSE's plateus at 0.1
+Drawing 300 Pictures with 10 Augmentation each Validation MSE's plateus at 0.015
+
+The Model reliably detects whether a drawn Picture is a circle or not
