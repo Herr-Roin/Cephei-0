@@ -17,12 +17,12 @@ def softmax(x):
     for s in range(len(x)):
         a[s,0]=((np.e)**(x[s,0]))/sum
     return s
-        
 
 #constants
 learn_rate=0.3
 mini_batch_size=1 # 1 disables stochastic GD
 standard_activation=sigmoid
+L1_regularization_constant=0.02
 L2_regularization_constant=0.0015 #Put 0 to disable L2 Regularization
 
 def backpropagation(data, epochs, overwrite, network,include_validation_test,validation_data, show_plot):
@@ -34,11 +34,11 @@ def backpropagation(data, epochs, overwrite, network,include_validation_test,val
     A=validation_data["X"]
     B=validation_data["Y"]
     
-    #Plotdata
+    #Plotdata and dropout lists
     trainingMSES=[]
     validationMSES=[]
-    trainingACC=[]
-    validationACC=[]
+    stats=[]
+    valminimum=0
     
     for j in range(epochs):
         m=0
@@ -83,11 +83,12 @@ def backpropagation(data, epochs, overwrite, network,include_validation_test,val
              batch_wheighted_error[l-1]+=(error[l-1] @ (a_l[l-1].transpose()))
             if m==mini_batch_size: 
                 for f in range(1,len(net.parameters)): # update wheights and biases with stochastic gradient descent
-                    net.w[f-1]=(1-(learn_rate*L2_regularization_constant)/len(X))*net.w[f-1] - learn_rate*batch_wheighted_error[f-1]/m
+                    net.w[f-1]=(1-(learn_rate*L2_regularization_constant)/len(X))*net.w[f-1] - ((learn_rate*L1_regularization_constant)/len(X))*np.sign(net.w[f-1]) - learn_rate*batch_wheighted_error[f-1]/m
                     net.b[f-1]=net.b[f-1] - learn_rate*batch_error[f-1]/m
                 m=0
                 
             trainingMSE+=((a_l[-1].sum()-Y[i].sum())**2)
+        stats.append(([w.copy() for w in net.w],[b.copy() for b in net.b]))
         
         trainingMSE=trainingMSE/len(X)
         trainingMSES.append(float(trainingMSE))
@@ -103,7 +104,11 @@ def backpropagation(data, epochs, overwrite, network,include_validation_test,val
             validationMSES.append(float(validationMMSE.item()))
             print(f"Validation MSE: {validationMMSE}")
         print("------------------")
-              
+        
+    valminimum=validationMSES.index(min(validationMSES))
+    net.w = stats[valminimum-1][0]
+    net.b = stats[valminimum-1][1]
+    print(f"The best MSE at epoch {valminimum} was found to be: {min(validationMSES)}")          
                 
     if show_plot:
         fig, (ax1,ax2) = plt.subplots(1,2)
@@ -127,5 +132,5 @@ def backpropagation(data, epochs, overwrite, network,include_validation_test,val
         
 data=np.load("data/trainingdata.npz")
 valdata=np.load("data/validationdata.npz")
-backpropagation(data,35,True,network.Network([28*28,32,1],False,0),True,valdata,True)
+backpropagation(data,40,True,network.Network([28*28,32,1],False,0),True,valdata,True)
 #main.main()
