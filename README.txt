@@ -13,6 +13,6 @@ tho never a line. The hypothesis is that Augmentation is not a substitude for di
 
 - The hypothesis was true:
 Drawing 30 Pictures with 100 augmentations each validation MSE's plateus at 0.1
-Drawing 300 Pictures with 10 Augmentation each Validation MSE's plateus at 0.015
+Drawing 300 Pictures with 10 Augmentation each Validation MSE's plateus at 0.013
 
 The Model reliably detects whether a drawn Picture is a circle or not
