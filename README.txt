@@ -15,13 +15,6 @@ tho never a line. The hypothesis is that Augmentation is not a substitude for di
 Drawing 30 Pictures with 100 augmentations each validation MSE's plateus at 0.1
 Drawing 300 Pictures with 10 Augmentation each Validation MSE's plateus at 0.013
 
-Pre-Release 2
-- Same training data
-- Added L1 and L2 regularization
-- Switched to cross entropy cost function
-- Picks the best validation MSE out of all epochs and uses those wheights / biases
-- Added possibility for stochastic gradient descent 
-New MSE 0.00066 (although validation data was only around 50 pictures)
 
 Release
 - Model now works on MNIST data
