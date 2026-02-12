@@ -2,6 +2,9 @@ import numpy as np
 
 def sigmoid(x):
     return 1/(1+np.e**-x)
+def softmax(x):
+    exp_x = np.exp(x - np.max(x))  
+    return exp_x / np.sum(exp_x)
 
 class Network(): #A Neural network specified to have one hidden layer only
     def __init__(self,parameters,use_para,data):
@@ -31,11 +34,43 @@ class Network(): #A Neural network specified to have one hidden layer only
                 a_l.append(sigmoid(z_l[_+1]))
         return a_l[-1]
     
-    def compute_and_calculateMSE(self,input,wanted_output):
-        output=self.compute(input)
-        squared_differences=0
-        for i in range(len(output)):
-            try: squared_differences+=(output[i]-wanted_output[i])**2
-            except IndexError: squared_differences+=(output-wanted_output)**2
+    def computesoftmax(self,input):
+        z_l=[]
+        a_l=[]
+        a_l.append(input.reshape(-1,1))
+        for layer_idx in range(len(self.parameters)-1):
+                z_l.append(self.forwardz(a_l[layer_idx], layer_idx+1))
+
+                if layer_idx == len(self.parameters)-2:  
+                    if self.parameters[-1] == 1:
+                        a_l.append(sigmoid(z_l[-1]))
+                    else:
+                        a_l.append(softmax(z_l[-1]))
+                else:
+                    a_l.append(sigmoid(z_l[-1]))
+                    
+        return a_l[-1]
+    
+    def compute_and_calculateMSE(self, input, wanted_output):
+        output = self.compute(input)
+        # If wanted_output is scalar, convert to one-hot
+        if np.isscalar(wanted_output) or len(wanted_output) == 1:
+            y_one_hot = np.zeros((self.parameters[-1], 1))
+            y_one_hot[int(wanted_output)] = 1.0
+            return np.mean((output - y_one_hot)**2)
+        else:
+            return np.mean((output - wanted_output.reshape(-1,1))**2)
+        
+    def compute_and_calculateMSE_soft(self, input, wanted_output):
+        output = self.computesoftmax(input)
+        # If wanted_output is scalar, convert to one-hot
+        if np.isscalar(wanted_output) or len(wanted_output) == 1:
+            if self.parameters[-1] == 1:
+                y_target = np.array([[float(wanted_output)]])   # shape (1,1)
+            else:
+                y_target = np.zeros((self.parameters[-1], 1))
+                y_target[int(wanted_output)] = 1.0
             
-        return squared_differences/len(output)
+            return np.mean((output - y_target)**2)
+        else:
+            return np.mean((output - wanted_output.reshape(-1,1))**2)

@@ -3,6 +3,8 @@ import numpy as np
 import writescript
 pygame.init()
 
+# Depreciated for Cephei 1 as MNIST datasets are used
+
 # Main loop
 def take_input(is_writing):
     
@@ -12,7 +14,7 @@ def take_input(is_writing):
     teach=None
     
     while True:
-        clock.tick(120)
+        clock.tick(300)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -31,6 +33,7 @@ def take_input(is_writing):
                         0.114 * pixels[:, :, 2]
                         )
                 gray= gray/255
+                gray = gray.T
                 x = gray.reshape(28 * 28, 1)
                 if event.key == pygame.K_c: screen.fill((0,0,0))
                 if event.key == pygame.K_2:
@@ -88,7 +91,7 @@ def take_input(is_writing):
         
         if drawing:
             pos = pygame.mouse.get_pos()
-            pygame.draw.circle(screen, (255, 255, 255), pos, 8)
+            pygame.draw.circle(screen, (255, 255, 255), pos, 5)
         
         pygame.display.update()
         

@@ -22,3 +22,10 @@ Pre-Release 2
 - Picks the best validation MSE out of all epochs and uses those wheights / biases
 - Added possibility for stochastic gradient descent 
 New MSE 0.00066 (although validation data was only around 50 pictures)
+
+Release
+- Model now works on MNIST data
+- A lot of problems occured trying MNIST, so i fixed them and actually made it fully modular, this now can easily switch between
+number of output neurons and parameters
+-Training is slow
+-Due to varying stroke whidht the model doesnt work good on own inputs, but scores 97% on mnist validation data

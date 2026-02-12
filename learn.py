@@ -9,21 +9,15 @@ def sigdev(x):
     return (sigmoid(x)*(1-sigmoid(x)))
 
 def softmax(x):
-    sum=0
-    a=np.array([0]*len(x))
-    
-    for i in range(len(x)):
-        sum+=(np.e)**(x[i])
-    for s in range(len(x)):
-        a[s,0]=((np.e)**(x[s,0]))/sum
-    return s
+    exp_x = np.exp(x - np.max(x))  
+    return exp_x / np.sum(exp_x)
 
 #constants
-learn_rate=0.3
+learn_rate=0.2
 mini_batch_size=1 # 1 disables stochastic GD
 standard_activation=sigmoid
-L1_regularization_constant=0.02
-L2_regularization_constant=0.0015 #Put 0 to disable L2 Regularization
+L1_regularization_constant=0.001
+L2_regularization_constant=0.05 #Put 0 to disable L2 Regularization
 
 def backpropagation(data, epochs, overwrite, network,include_validation_test,validation_data, show_plot):
     
@@ -52,27 +46,38 @@ def backpropagation(data, epochs, overwrite, network,include_validation_test,val
         A = A[perm]
         B = B[perm]
         trainingMSE=0
+        
+        batch_error = [np.zeros((net.parameters[l+1], 1)) for l in range(len(net.w))]
+        batch_weighted_error = [np.zeros((net.parameters[l+1], net.parameters[l])) for l in range(len(net.w))]
         for i in range(len(X)):
             m+=1
             
             z_l=[0]
             a_l=[]
             error=[0 for i in range(1,len(net.parameters))] 
-            if m==1: 
-                batch_error=[0 for i in range(1,len(net.parameters))]  
-                batch_wheighted_error=[0 for i in range(1,len(net.parameters))] 
                 
             a_l.append(X[i].reshape(-1, 1)) #layer 0
             
-            for _ in range(len(net.parameters)-1): #Computation using sigmoid or softmax
-                z_l.append(net.forwardz(a_l[_],_+1))
-                if _==range(len(net.parameters)-1):
-                    if len(z_l[-1])==1: a_l.append(standard_activation(z_l[-1]))
-                    if len(z_l[-1])>1: a_l.append(softmax(z_l[-1]))
-                if _!=range(len(net.parameters)-1): a_l.append(standard_activation(z_l[_+1]))
-            
-            error[-1]=(a_l[-1]-int(Y[i])) #output error (cross etropy)
-            
+            for layer_idx in range(len(net.parameters)-1):
+                z_l.append(net.forwardz(a_l[layer_idx], layer_idx+1))
+
+                # Check if this is the LAST layer
+                if layer_idx == len(net.parameters)-2:  # Last layer
+                    if net.parameters[-1] == 1:
+                        a_l.append(sigmoid(z_l[-1]))
+                    else:
+                        a_l.append(softmax(z_l[-1]))
+                else:
+                    a_l.append(sigmoid(z_l[-1]))
+                    
+            if net.parameters[-1] == 1:
+                y_target = np.array([[float(Y[i])]])   # shape (1,1)
+            else:
+                y_target = np.zeros((net.parameters[-1], 1))
+                y_target[int(Y[i])] = 1.0
+
+            error[-1] = a_l[-1] - y_target
+                        
             for d in reversed(range(len(net.parameters))): #Backpropagating the error
                 if d==0:break
                 if d==len(net.parameters)-1: continue
@@ -80,14 +85,24 @@ def backpropagation(data, epochs, overwrite, network,include_validation_test,val
             
             for l in range(1,len(net.parameters)): #stochastic gradient descent
              batch_error[l-1]+=error[l-1]
-             batch_wheighted_error[l-1]+=(error[l-1] @ (a_l[l-1].transpose()))
+             batch_weighted_error[l-1]+=(error[l-1] @ (a_l[l-1].transpose()))
             if m==mini_batch_size: 
                 for f in range(1,len(net.parameters)): # update wheights and biases with stochastic gradient descent
-                    net.w[f-1]=(1-(learn_rate*L2_regularization_constant)/len(X))*net.w[f-1] - ((learn_rate*L1_regularization_constant)/len(X))*np.sign(net.w[f-1]) - learn_rate*batch_wheighted_error[f-1]/m
+                    net.w[f-1]=(1-(learn_rate*L2_regularization_constant)/len(X))*net.w[f-1] - ((learn_rate*L1_regularization_constant)/len(X))*np.sign(net.w[f-1]) - learn_rate*batch_weighted_error[f-1]/m
                     net.b[f-1]=net.b[f-1] - learn_rate*batch_error[f-1]/m
+                    
+                batch_error = [np.zeros((net.parameters[l+1], 1)) for l in range(len(net.w))]
+                batch_weighted_error = [np.zeros((net.parameters[l+1], net.parameters[l])) for l in range(len(net.w))]
                 m=0
                 
-            trainingMSE+=((a_l[-1].sum()-Y[i].sum())**2)
+            if net.parameters[-1] == 1:
+                trainingMSE += (a_l[-1].item() - Y[i])**2
+            else:
+                # One-hot encode for loss calculation
+                y_one_hot = np.zeros((net.parameters[-1], 1))
+                y_one_hot[int(Y[i])] = 1.0
+                trainingMSE += np.mean((a_l[-1] - y_one_hot)**2)
+                
         stats.append(([w.copy() for w in net.w],[b.copy() for b in net.b]))
         
         trainingMSE=trainingMSE/len(X)
@@ -99,10 +114,17 @@ def backpropagation(data, epochs, overwrite, network,include_validation_test,val
             
         if include_validation_test:
             for p in range(len(A)):
-                validationMSE+=net.compute_and_calculateMSE(A[p],B[p])
-            validationMMSE=validationMSE/len(A)
+                validationMSE+=net.compute_and_calculateMSE_soft(A[p],B[p])
+            validationMMSE=(validationMSE.sum()/len(A))
             validationMSES.append(float(validationMMSE.item()))
             print(f"Validation MSE: {validationMMSE}")
+        correct=0    
+        for i in range(len(A)):
+            output = net.computesoftmax(A[i])
+            pred = np.argmax(output)
+            if pred == B[i]:
+                correct += 1
+        print(f"Validation Accuracy: {correct/len(A):.2%}")
         print("------------------")
         
     valminimum=validationMSES.index(min(validationMSES))
@@ -132,5 +154,5 @@ def backpropagation(data, epochs, overwrite, network,include_validation_test,val
         
 data=np.load("data/trainingdata.npz")
 valdata=np.load("data/validationdata.npz")
-backpropagation(data,40,True,network.Network([28*28,32,1],False,0),True,valdata,True)
+backpropagation(data,30,False,network.Network([28*28,100,10],False,0),True,valdata,True)
 #main.main()
