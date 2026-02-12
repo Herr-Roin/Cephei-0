@@ -22,3 +22,4 @@ Release
 number of output neurons and parameters
 -Training is slow
 -Due to varying stroke whidht the model doesnt work good on own inputs, but scores 97% on mnist validation data
+
